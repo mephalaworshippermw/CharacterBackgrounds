@@ -1,41 +1,30 @@
-local vfs = require("openmw.vfs")
-
--- require("scripts.CharacterBackgrounds.ui.uiBuilder")
+require("scripts.CharacterBackgrounds.ui.uiBuilder")
 require("scripts.CharacterBackgrounds.ui.statWindow")
-local Background = require("scripts.CharacterBackgrounds.model.background")
-local bgPath = "scripts/CharacterBackgrounds/backgrounds"
-local selectedBg = {
-    id = "None",
-    name = "-None-",
-    description = "No background selected.",
-}
-
-local bgs = {}
-
-for fileName in vfs.pathsWithPrefix(bgPath) do
-    local modName = fileName:gsub(".lua", "")
-    local bg = Background:new(require(modName))
-    -- print(string.format("Loaded background '%s'", bg.id))
-    bgs[bg.id] = bg
-end
+local bgList = require("scripts.CharacterBackgrounds.model.backgroundList")
+local currbgIdx = 1
+local currBg = bgList[currbgIdx]
 
 local function onLoad(data)
-    selectedBg = data.selectedBg or selectedBg
+    if not data then return end
+    currBg = bgList[data.currBgIdx] or currBg
 end
 
 local function onSave()
     return {
-        selectedBg = selectedBg,
+        currBgIdx = currbgIdx,
     }
 end
 
-InitBgLine(Background:new(selectedBg))
+InitBgLine(currBg)
+
+if currBg.onLoad then
+    currBg:onLoad()
+end
 
 return {
     engineHandlers = {
         onLoad = onLoad,
         onSave = onSave,
-        onFrame = OnFrame,
         onMouseWheel = OnMouseWheel,
     },
 }

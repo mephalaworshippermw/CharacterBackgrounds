@@ -8,13 +8,13 @@ local makeBorder = require("scripts.CharacterBackgrounds.ui.makeBorder")
 
 
 -- Configuration from main window
-local textSize = 24
+local textSize = 16
 local spacer = 5
 local borderOffset = 1
-local borderFile = "thin"
+local borderFile = "thick"
 
 -- Colors (should match main window)
-local function getColorFromGameSettings(colorTag)
+local function getColorFromGMST(colorTag)
     local result = core.getGMST(colorTag)
     if not result then
         return util.color.rgb(1, 1, 1)
@@ -44,12 +44,12 @@ local function getTexture(path)
 end
 
 -- Color setup
-local textColor = getColorFromGameSettings("fontColor_color_normal_over")
-local morrowindGold = getColorFromGameSettings("fontColor_color_normal")
+local textColor = getColorFromGMST("fontColor_color_normal")
+local morrowindGold = getColorFromGMST("fontColor_color_normal")
 local background = ui.texture { path = 'black' }
 
 -- Border templates
-local borderTemplate = makeBorder(borderFile, util.color.rgb(0.5, 0.5, 0.5), borderOffset, {
+local borderTemplate = makeBorder(borderFile, util.color.rgb(1, 1, 1), borderOffset, {
     type = ui.TYPE.Image,
     props = {
         relativeSize = v2(1, 1),
@@ -106,6 +106,7 @@ local function makeButton(label, props, func, highlightColor, parent)
             textSize = textSize,
             textAlignH = ui.ALIGNMENT.Center,
             textAlignV = ui.ALIGNMENT.Center,
+            wordWrap = true,
         },
     }
     box.layout.content:add(text)
@@ -152,15 +153,19 @@ local function makeButton(label, props, func, highlightColor, parent)
     clickbox.events = {
         mouseRelease = async:callback(function(_, elem)
             elem.userData.pressed = false
-            onFrameFunctions[uniqueButtonId] = function()
-                --if renameWindow then
-                if elem.userData.focus and core.getRealTime() > creationTime + 0.4 then
-                    func(elem)
-                end
-                applyColor(elem)
-                --end
-                onFrameFunctions[uniqueButtonId] = nil
+            if elem.userData.focus and core.getRealTime() > creationTime + 0.4 then
+                func(elem)
             end
+            applyColor(elem)
+            -- onFrameFunctions[uniqueButtonId] = function()
+            --     --if renameWindow then
+            --     if elem.userData.focus and core.getRealTime() > creationTime + 0.4 then
+            --         func(elem)
+            --     end
+            --     applyColor(elem)
+            --     --end
+            --     onFrameFunctions[uniqueButtonId] = nil
+            -- end
         end),
         focusGain = async:callback(function(_, elem)
             elem.userData.focus = true
@@ -185,4 +190,4 @@ end
 
 
 
-return makeButton, refreshButtons
+return makeButton -- , refreshButtons

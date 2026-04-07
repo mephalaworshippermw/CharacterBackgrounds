@@ -197,6 +197,7 @@ local function borderTemplates(thickness, color, borderSize, background)
 
     return result
 end
+
 return borderTemplates
 --
 --local thinBorders = borderTemplates('thin')

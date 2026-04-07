@@ -1,39 +1,22 @@
 local ui = require('openmw.ui')
 local util = require('openmw.util')
 local v2 = util.vector2
+local I = require("openmw.interfaces")
 
-local onFrameFunctions = {}
+local bgList = require("scripts.CharacterBackgrounds.model.backgroundList")
 local makeBorder = require("scripts.CharacterBackgrounds.ui.makeBorder")
 local makeButton = require("scripts.CharacterBackgrounds.ui.makeButton")
 local selectedButton = nil
-local listSize = 19
-local currentIndex = 20
-
+local listSize = 14
+local currentIndex = 1
+local borderThickness = 4
+local borderFile = "thick"
 local morrowindGold = util.color.rgb(0.792157, 0.647059, 0.376471)
 local morrowindLight = util.color.rgb(0.87451, 0.788235, 0.623529)
+local rootWidth = 800
+local rootHeight = 450
 
-local exampleData = {}
-for _ = 1, 100 do
-    table.insert(exampleData, "" .. math.floor(math.random() * 100000))
-end
-
-
-
--- creating the demo ui onload
--- local template = {
---     content = ui.content { {
---         type = ui.TYPE.Image,
---         name = "timeHudBackground",
---         props = {
---             resource = ui.texture { path = 'black' },
---             relativeSize = v2(1, 1), -- Fill entire container
---             alpha = BACKGROUND_ALPHA
---         }
---     } }
--- }
-local borderOffset = 3
-local borderFile = "thick"
-local template = makeBorder(borderFile, util.color.rgb(0.5, 0.5, 0.5), borderOffset, {
+local template = makeBorder(borderFile, util.color.rgb(1, 1, 1), borderThickness, {
     type = ui.TYPE.Image,
     props = {
         resource = ui.texture { path = 'black' },
@@ -52,7 +35,7 @@ local root = ui.create {
         relativePosition = v2(0.5, 0.5),
         anchor = v2(0.5, 0.5),
         autoSize = true,
-        size = v2(800, 600)
+        size = v2(rootWidth, rootHeight)
     },
     content = ui.content {},
 }
@@ -62,6 +45,7 @@ local flex_V = {
     type = ui.TYPE.Flex,
     name = "foobar",
     props = {
+        arrange = ui.ALIGNMENT.Center,
         horizontal = false,
     },
     content = ui.content {},
@@ -73,22 +57,26 @@ flex_V.content:add {
     name = 'text',
     type = ui.TYPE.Text,
     props = {
-        --relativePosition = v2(0.5,0.5),
-        --anchor = v2(0.5,0.5),
+        -- relativePosition = v2(0.5,0),
+        -- anchor = v2(0.5,0),
         text = "Select your background",
-        textColor = util.color.rgb(0.792157, 0.647059, 0.376471),
+        textColor = morrowindGold,
         textShadow = true,
         textShadowColor = util.color.rgb(0, 0, 0),
-        textSize = 24,
+        textSize = 16,
         textAlignH = ui.ALIGNMENT.Center,
         textAlignV = ui.ALIGNMENT.Center,
     },
 }
-flex_V.content:add { props = { size = v2(1, 1) * 5 } }
+flex_V.content:add {
+    props = {
+        size = v2(1, 1) * 5
+    }
+}
 
 
 -- add horizontal flex for 2 column layout
-local flex_V_H = {
+local flex_V_H1 = {
     type = ui.TYPE.Flex,
     name = "foobar",
     props = {
@@ -96,114 +84,167 @@ local flex_V_H = {
     },
     content = ui.content {},
 }
-flex_V.content:add(flex_V_H)
+flex_V.content:add(flex_V_H1)
 
-flex_V.content:add { props = { size = v2(1, 1) * 5 } }
-
--- add vertical flex for scrollbar
-local flex_V_H_V1 = ui.create {
-    type = ui.TYPE.Flex,
-    name = "foobar",
+flex_V.content:add {
     props = {
-        horizontal = false,
-        size = v2(20, 600),
-        autoSize = false,
-    },
-    content = ui.content {},
+        size = v2(1, 1) * 5
+    }
 }
-flex_V_H.content:add(flex_V_H_V1)
 
 -- add vertical flex for list
-local flex_V_H_V2 = ui.create {
+local flex_V_H1_V1 = ui.create {
     type = ui.TYPE.Flex,
-    name = "foobar",
+    name = "list",
     props = {
         horizontal = false,
-        size = v2(300, 600),
+        size = v2(300, rootHeight),
         autoSize = false,
     },
     content = ui.content {},
 }
-flex_V_H.content:add(flex_V_H_V2)
+flex_V_H1.content:add(flex_V_H1_V1)
+
+-- add vertical flex for scrollbar
+local flex_V_H1_V2 = ui.create {
+    type = ui.TYPE.Flex,
+    name = "scrollbar",
+    props = {
+        horizontal = false,
+        size = v2(20, rootHeight),
+        autoSize = false,
+    },
+    content = ui.content {},
+}
+flex_V_H1.content:add(flex_V_H1_V2)
 
 -- add vertical flex for right column (descriptions, etc)
-local flex_V_H_V3 = ui.create {
+local flex_V_H1_V3 = ui.create {
     type = ui.TYPE.Flex,
-    name = "foobar",
+    name = "descriptionBox",
     props = {
         horizontal = false,
-        size = v2(480, 600),
+        size = v2(480, rootHeight),
         autoSize = false,
     },
     content = ui.content {},
 }
-flex_V_H.content:add(flex_V_H_V3)
+flex_V_H1.content:add(flex_V_H1_V3)
 
+local description = ui.create {
+    type = ui.TYPE.Text,
+    name = "description",
+    props = {
+        multiline = true,
+        wordWrap = true,
+        relativeSize = v2(1, 1),
+        autoSize = false,
+    },
+    template = I.MWUI.templates.textNormal
+}
+flex_V_H1_V3.layout.content:add(description)
 
+local bottomButtonsHeight = 25
+-- add horizontal flex for 2 column layout
+local flex_V_H2 = {
+    type = ui.TYPE.Flex,
+    name = "footer",
+    props = {
+        horizontal = true,
+        size = v2(rootWidth, bottomButtonsHeight),
+        align = ui.ALIGNMENT.End,
+    },
+    content = ui.content {},
+}
+flex_V.content:add(flex_V_H2)
 
-for i = currentIndex, math.min(#exampleData, currentIndex + listSize) do
+flex_V.content:add {
+    props = {
+        size = v2(1, 1) * 5
+    }
+}
+
+local button_V_H2_V1 = makeButton(
+    "Random",
+    {
+        size = v2(80, bottomButtonsHeight)
+    },
+    function ()
+        -- TODO add randomization
+        ui.showMessage("Randomizing the background...")
+    end,
+    morrowindGold,
+    root
+)
+flex_V_H2.content:add(button_V_H2_V1.box)
+
+local button_V_H2_V2 = makeButton(
+    "OK",
+    {
+        size = v2(50, bottomButtonsHeight)
+    },
+    function ()
+        -- TODO add picking
+        root:destroy()
+    end,
+    morrowindGold,
+    root
+)
+flex_V_H2.content:add(button_V_H2_V2.box)
+
+local function generateButtonByIndex(i)
     local button
-    button = makeButton("Confirm" .. i, { size = v2(300, 30) }, function()
-        ui.showMessage("Confirm" .. i .. "clicked")
-        if selectedButton then
-            selectedButton.clickbox.userData.selected = false
-            selectedButton.applyColor()
-        end
-        selectedButton = button
-        button.clickbox.userData.selected = true
-    end, morrowindGold, root)
-    flex_V_H_V2.layout.content:add(button.box)
+    return makeButton(
+        bgList[i].name,
+        {
+            size = v2(300, 30)
+        },
+        function()
+            description.layout.props.text = bgList[i].description
+            description:update()
+
+            if selectedButton then
+                selectedButton.clickbox.userData.selected = false
+                selectedButton.applyColor()
+            end
+            selectedButton = button
+            button.clickbox.userData.selected = true
+        end,
+        morrowindGold,
+        root
+    )
 end
 
--- required onFrame function to allow for cancelling a button click
-function OnFrame(dt)
-    for _, onFrameFunction in pairs(onFrameFunctions) do
-        onFrameFunction(dt)
-    end
+for i = currentIndex, math.min(#bgList, currentIndex + listSize) do
+    local button = generateButtonByIndex(i)
+    flex_V_H1_V1.layout.content:add(button.box)
 end
-
 
 function OnMouseWheel(direction)
     direction = direction * 2
-    local newIndex = math.max(1, math.min(#exampleData - listSize + 1, currentIndex - direction))
+    local newIndex = math.max(1, math.min(#bgList - listSize, currentIndex - direction))
     if newIndex < currentIndex then
+        -- upwards
         for i = currentIndex - 1, newIndex, -1 do
-            local tempDestroy = flex_V_H_V2.layout.content[#flex_V_H_V2.layout.content]
-            flex_V_H_V2.layout.content[#flex_V_H_V2.layout.content] = nil
+            local tempDestroy = flex_V_H1_V1.layout.content[#flex_V_H1_V1.layout.content]
+            flex_V_H1_V1.layout.content[#flex_V_H1_V1.layout.content] = nil
             tempDestroy:destroy()
 
-            local button
-            button = makeButton("Confirm" .. i, { size = v2(300, 30) }, function()
-                ui.showMessage("Confirm" .. i .. "clicked")
-                if selectedButton then
-                    selectedButton.clickbox.userData.selected = false
-                    selectedButton.applyColor()
-                end
-                selectedButton = button
-                button.clickbox.userData.selected = true
-            end, morrowindGold, root)
-            flex_V_H_V2.layout.content:insert(1, button.box)
+            local button = generateButtonByIndex(i)
+            flex_V_H1_V1.layout.content:insert(1, button.box)
         end
-        flex_V_H_V2:update()
+        flex_V_H1_V1:update()
     elseif newIndex > currentIndex then
+        -- downwards
         for i = currentIndex + 1, newIndex, 1 do
-            local tempDestroy = flex_V_H_V2.layout.content[1]
-            table.remove(flex_V_H_V2.layout.content, 1)
+            local tempDestroy = flex_V_H1_V1.layout.content[1]
+            table.remove(flex_V_H1_V1.layout.content, 1)
 
-            local button
-            button = makeButton("Confirm" .. i, { size = v2(300, 30) }, function()
-                ui.showMessage("Confirm" .. i .. "clicked")
-                if selectedButton then
-                    selectedButton.clickbox.userData.selected = false
-                    selectedButton.applyColor()
-                end
-                selectedButton = button
-                button.clickbox.userData.selected = true
-            end, morrowindGold, root)
-            flex_V_H_V2.layout.content:add(button.box)
+            local button = generateButtonByIndex(#bgList - i + 2)
+            flex_V_H1_V1.layout.content:add(button.box)
             tempDestroy:destroy()
         end
-        flex_V_H_V2:update()
+        flex_V_H1_V1:update()
     end
     currentIndex = newIndex
 end
