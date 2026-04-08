@@ -3,9 +3,10 @@ local ui = require('openmw.ui')
 local util = require('openmw.util')
 local v2 = util.vector2
 local I = require("openmw.interfaces")
+local async = require("openmw.async")
+local ambient = require("openmw.ambient")
 
 local elements = require("scripts.CharacterBackgrounds.ui.templates.elements")
-local makeBorder = require("scripts.CharacterBackgrounds.ui.templates.border")
 local C = require("scripts.CharacterBackgrounds.utils.consts")
 local bgList = require("scripts.CharacterBackgrounds.model.backgroundList")
 
@@ -16,6 +17,11 @@ local topPadding = 8
 local contentOuterPadding = 4
 local contentCenterPadding = 6
 local rootWidth = contentWidth * 2 + contentOuterPadding * 2 + contentCenterPadding
+local scrollbarWidth = 21
+
+local selectedBgIdx = 1
+
+local root
 
 local function padding(x, y)
     return {
@@ -27,12 +33,14 @@ end
 
 local function borderPadding(content)
     return {
+        name = "wrapper",
         template = I.MWUI.templates.borders,
         props = {
             size = v2(contentWidth, contentHeight)
         },
         content = ui.content {
             {
+                name = "padding",
                 template = I.MWUI.templates.padding,
                 content = ui.content { content }
             }
@@ -42,24 +50,8 @@ end
 
 
 
-local descHeader = {
-    template = I.MWUI.templates.textHeader,
-    props = {
-        text = "Header",
-    }
-}
-local descText = {
-    template = I.MWUI.templates.textParagraph,
-    props = {
-        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-    },
-    external = {
-        stretch = .975,
-        grow = 1,
-    }
-}
 
-local descFlex = borderPadding {
+local descWrapper = borderPadding {
     name = "descFlex",
     type = ui.TYPE.Flex,
     props = {
@@ -68,11 +60,110 @@ local descFlex = borderPadding {
         size = v2(contentWidth, contentHeight),
     },
     content = ui.content {
-        descHeader,
+        ui.create {
+            name = "header",
+            template = I.MWUI.templates.textHeader,
+            props = {
+                text = "Header",
+            }
+        },
         padding(0, 5),
-        descText
+        ui.create {
+            name = "description",
+            template = I.MWUI.templates.textParagraph,
+            props = {
+                text =
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+            },
+            external = {
+                stretch = .975,
+                grow = 1,
+            }
+        },
     }
 }
+
+
+---@type table<number, Element>
+local bgOptions = {}
+for i, bg in ipairs(bgList) do
+    local bgOption = ui.create {
+        template = I.MWUI.templates.textNormal,
+        props = {
+            -- I know, I'm a genius
+            text = bg.name .. "                                    "
+        },
+        userData = {
+            idx = i,
+            name = bg.name,
+            desc = bg.description,
+            selected = false,
+        },
+        events = {}
+    }
+
+    local events = bgOption.layout.events
+    local props = bgOption.layout.props
+    local userData = bgOption.layout.userData
+    events.focusLoss = async:callback(function()
+        props.textColor = userData.selected
+            and C.Colors.ACTIVE
+            or C.Colors.DEFAULT
+        bgOption:update()
+    end)
+    events.focusGain = async:callback(function()
+        props.textColor = userData.selected
+            and C.Colors.ACTIVE_LIGHT
+            or C.Colors.DEFAULT_LIGHT
+        bgOption:update()
+    end)
+    events.mousePress = async:callback(function()
+        ambient.playSound('menu click')
+        props.textColor = userData.selected
+            and C.Colors.ACTIVE_PRESSED
+            or C.Colors.DEFAULT_PRESSED
+        bgOption:update()
+    end)
+    events.mouseRelease = async:callback(function()
+        if userData.selected then return end
+
+        local prevActiveOption = bgOptions[selectedBgIdx * 2 - 1]
+        prevActiveOption.layout.userData.selected = false
+        prevActiveOption.layout.props.textColor = C.Colors.DEFAULT
+        prevActiveOption:update()
+
+        props.textColor = C.Colors.ACTIVE
+        userData.selected = true
+        selectedBgIdx = userData.idx
+        bgOption:update()
+
+        local descFlex = descWrapper.content["padding"].content[1]
+        local descHeader = descFlex.content[1]
+        local descDescription = descFlex.content[3]
+        descHeader.layout.props.text = userData.name
+        descDescription.layout.props.text = userData.desc
+        descHeader:update()
+        descDescription:update()
+    end)
+
+    bgOptions[#bgOptions + 1] = bgOption
+    bgOptions[#bgOptions + 1] = padding(0, 2)
+end
+bgOptions[1].layout.events.mouseRelease()
+
+local bgOptionsWrapper = elements.scrollable(
+    v2(contentWidth - scrollbarWidth, contentHeight - 7),
+    ui.content(bgOptions),
+    v2(contentWidth - scrollbarWidth, contentHeight - 7),
+    0,
+    0,
+    2,
+    false,
+    function() end,
+    function() end,
+    1,
+    "scrollable"
+)
 
 local selectFlex = borderPadding {
     name = "selectFlex",
@@ -82,7 +173,8 @@ local selectFlex = borderPadding {
         size = v2(contentWidth, contentHeight),
     },
     content = ui.content {
-
+        bgOptionsWrapper,
+        elements.scrollBar(bgOptionsWrapper),
     }
 }
 
@@ -97,7 +189,7 @@ local content = {
         padding(contentOuterPadding, 0),
         selectFlex,
         padding(contentCenterPadding, 0),
-        descFlex,
+        descWrapper,
         padding(contentOuterPadding, 0),
     }
 }
@@ -111,41 +203,8 @@ local header = {
     }
 }
 
-local flex_V1 = {
-    name = "flex_V1",
-    type = ui.TYPE.Flex,
-    props = {
-        horizontal = false,
-        arrange = ui.ALIGNMENT.Center,
-    },
-    content = ui.content {
-        padding(0, topPadding),
-        header,
-        padding(0, contentOuterPadding),
-        content,
-        padding(0, contentOuterPadding)
-    }
-}
-
-local root = ui.create {
-    name = "root",
-    layer = "Windows",
-    template = I.MWUI.templates.boxTransparentThick,
-    props = {
-        relativePosition = v2(0.5, 0.5),
-        anchor = v2(0.5, 0.5),
-    },
-    content = ui.content { {
-        template = I.MWUI.templates.padding,
-        content = ui.content {
-            flex_V1
-        }
-    } }
-}
-
-
-
 local footer = ui.create {
+    name = "footer",
     type = ui.TYPE.Flex,
     props = {
         horizontal = true,
@@ -157,7 +216,8 @@ local footer = ui.create {
             "Random",
             textSize,
             function()
-                ui.showMessage("Picking random background...")
+                local idx = math.random(#bgOptions / 2)
+                bgOptions[idx * 2 - 1].layout.events.mouseRelease()
             end,
             "buttonRandom",
             1
@@ -175,9 +235,36 @@ local footer = ui.create {
         padding(contentCenterPadding, 0),
     }
 }
-flex_V1.content:add(footer)
-flex_V1.content:add(padding(0, topPadding))
 
-
+root = ui.create {
+    name = "root",
+    layer = "Windows",
+    template = I.MWUI.templates.boxTransparentThick,
+    props = {
+        relativePosition = v2(0.5, 0.5),
+        anchor = v2(0.5, 0.5),
+    },
+    content = ui.content { {
+        name = "rootPadding",
+        template = I.MWUI.templates.padding,
+        content = ui.content { {
+            name = "flex_V1",
+            type = ui.TYPE.Flex,
+            props = {
+                horizontal = false,
+                arrange = ui.ALIGNMENT.Center,
+            },
+            content = ui.content {
+                padding(0, topPadding),
+                header,
+                padding(0, contentOuterPadding),
+                content,
+                padding(0, contentOuterPadding),
+                footer,
+                padding(0, topPadding),
+            }
+        } }
+    } }
+}
 
 root:update()

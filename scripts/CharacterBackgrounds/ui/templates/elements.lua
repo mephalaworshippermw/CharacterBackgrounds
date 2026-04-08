@@ -265,7 +265,7 @@ Templates.button = function(text, textSize, onClick, name, bgrAlpha)
     end)
     element.layout.events.mousePress = async:callback(function()
         ambient.playSound('menu click')
-        btnText.props.textColor = C.Colors.WHITE
+        btnText.props.textColor = C.Colors.DEFAULT_PRESSED
         element:update()
     end)
     element.layout.events.mouseRelease = async:callback(function()
@@ -442,6 +442,7 @@ Templates.scrollable = function(size, content, flexSize, padding, borderThicknes
             {
                 type = ui.TYPE.Flex,
                 props = {
+                    horizontal = false,
                     autoSize = false,
                     size = flexSize,
                     relativeSize = util.vector2(1, 0),
