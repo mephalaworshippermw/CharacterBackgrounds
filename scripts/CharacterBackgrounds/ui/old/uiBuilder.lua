@@ -4,8 +4,8 @@ local v2 = util.vector2
 local I = require("openmw.interfaces")
 
 local bgList = require("scripts.CharacterBackgrounds.model.backgroundList")
-local makeBorder = require("scripts.CharacterBackgrounds.ui.makeBorder")
-local makeButton = require("scripts.CharacterBackgrounds.ui.makeButton")
+local makeBorder = require("scripts.CharacterBackgrounds.ui.templates.border")
+local makeButton = require("scripts.CharacterBackgrounds.ui.old.makeButton")
 local selectedButton = nil
 local listSize = 14
 local currentIndex = 1
@@ -16,14 +16,19 @@ local morrowindLight = util.color.rgb(0.87451, 0.788235, 0.623529)
 local rootWidth = 800
 local rootHeight = 450
 
-local template = makeBorder(borderFile, util.color.rgb(1, 1, 1), borderThickness, {
-    type = ui.TYPE.Image,
-    props = {
-        resource = ui.texture { path = 'black' },
-        relativeSize = v2(1, 1),
-        alpha = 0.8,
+local template = makeBorder(
+    borderFile,
+    util.color.rgb(1, 1, 1),
+    borderThickness,
+    {
+        type = ui.TYPE.Image,
+        props = {
+            resource = ui.texture { path = 'black' },
+            relativeSize = v2(1, 1),
+            alpha = 0.8,
+        }
     }
-}).borders
+).borders
 
 --container / window
 local root = ui.create {
@@ -169,7 +174,7 @@ local button_V_H2_V1 = makeButton(
     {
         size = v2(80, bottomButtonsHeight)
     },
-    function ()
+    function()
         -- TODO add randomization
         ui.showMessage("Randomizing the background...")
     end,
@@ -183,7 +188,7 @@ local button_V_H2_V2 = makeButton(
     {
         size = v2(50, bottomButtonsHeight)
     },
-    function ()
+    function()
         -- TODO add picking
         root:destroy()
     end,

@@ -4,7 +4,7 @@ local core = require('openmw.core')
 local ui = require('openmw.ui')
 local async = require('openmw.async')
 -- Import required modules
-local makeBorder = require("scripts.CharacterBackgrounds.ui.makeBorder")
+local makeBorder = require("scripts.CharacterBackgrounds.ui.templates.border")
 
 
 -- Configuration from main window

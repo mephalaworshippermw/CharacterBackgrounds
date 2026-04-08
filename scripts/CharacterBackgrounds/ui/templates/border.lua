@@ -199,15 +199,3 @@ local function borderTemplates(thickness, color, borderSize, background)
 end
 
 return borderTemplates
---
---local thinBorders = borderTemplates('thin')
---local thickBorders = borderTemplates('thick')
---
---return function(templates)
---    for k, t in pairs(thinBorders) do
---        templates[k] = t
---    end
---    for k, t in pairs(thickBorders) do
---        templates[k .. 'Thick'] = t
---    end
---end

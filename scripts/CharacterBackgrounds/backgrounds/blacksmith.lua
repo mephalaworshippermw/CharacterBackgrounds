@@ -4,9 +4,7 @@ return {
     id = "blacksmith",
     name = "Apprenticed to a Blacksmith",
     description = (
-        "Your master was a hard man. You gain a bonus to Strength (+5) " ..
-        "and a bonus to your Armorer skill (+15), but you suffer a penalty " ..
-        "to Agility (-10) due to the strenuous and repetitive hard labor.\n" ..
+        "Your master was a hard man. You are tough, but also stiff due to the strenuous and repetitive hard labor.\n" ..
         "\n" ..
         "+5 Strength\n" ..
         "+15 Armorer\n" ..

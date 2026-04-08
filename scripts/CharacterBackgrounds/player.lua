@@ -1,5 +1,6 @@
-require("scripts.CharacterBackgrounds.ui.uiBuilder")
+-- require("scripts.CharacterBackgrounds.ui.old.uiBuilder")
 require("scripts.CharacterBackgrounds.ui.statWindow")
+require("scripts.CharacterBackgrounds.ui.bgWindow")
 local bgList = require("scripts.CharacterBackgrounds.model.backgroundList")
 local currbgIdx = 1
 local currBg = bgList[currbgIdx]

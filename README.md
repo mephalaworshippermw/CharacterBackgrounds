@@ -1,6 +1,6 @@
 # Character Backgrounds (OpenMW)
 
-You're not my mom!
+I'll figure it out later.
 
 _For MWSE alternative check [Merlord's Character Backgrounds](https://www.nexusmods.com/morrowind/mods/46795) by Merlord._
 
@@ -13,5 +13,5 @@ _For MWSE alternative check [Merlord's Character Backgrounds](https://www.nexusm
 ## Credits
 
 **Sosnoviy Bor** - Author  
-**Ownlyme** - Making the UI template used here  
+**Ownlyme, Hyacinth, urm** - Invaluable help with making the UI
 **Merlord** - Inspiration ([Merlord's Character Backgrounds](https://www.nexusmods.com/morrowind/mods/46795))
