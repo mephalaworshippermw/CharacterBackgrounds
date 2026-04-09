@@ -17,6 +17,7 @@ local topPadding = 8
 local contentOuterPadding = 4
 local contentCenterPadding = 6
 local rootWidth = contentWidth * 2 + contentOuterPadding * 2 + contentCenterPadding
+local startIndex = 1
 
 local root
 
@@ -61,7 +62,7 @@ local descWrapper = borderPadding {
             name = "header",
             template = I.MWUI.templates.textHeader,
             props = {
-                text = bgList[1].name,
+                text = bgList[startIndex].name,
             }
         },
         padding(0, 5),
@@ -69,7 +70,7 @@ local descWrapper = borderPadding {
             name = "description",
             template = I.MWUI.templates.textParagraph,
             props = {
-                text = bgList[1].description
+                text = bgList[startIndex].description
             },
             external = {
                 stretch = .975,
@@ -203,6 +204,6 @@ root = ui.create {
     } }
 }
 
-virtualBgList:changeSelection(1)
+virtualBgList:changeSelection(startIndex)
 root:update()
 return VirtualList.getMouseWheelHandler()
