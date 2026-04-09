@@ -79,9 +79,16 @@ local descWrapper = borderPadding {
         },
     }
 }
+
 local descFlex = descWrapper.content["padding"].content["descFlex"]
 local descHeader = descFlex.content[1]
-local descDesc = descFlex.content[3]
+local descBody = descFlex.content[3]
+local function updateDesc(i)
+    descHeader.layout.props.text = bgList[i].name
+    descBody.layout.props.text = bgList[i].description
+    descHeader:update()
+    descBody:update()
+end
 
 
 
@@ -96,11 +103,7 @@ local virtualBgList = VirtualList.create {
                 text = bgList[i].name,
             },
             onMousePress = function ()
-                descHeader.layout.props.text = bgList[i].name
-                descDesc.layout.props.text = bgList[i].description
-                descHeader:update()
-                descDesc:update()
-
+                updateDesc(i)
                 list:changeSelection(i)
             end
         }
@@ -109,6 +112,7 @@ local virtualBgList = VirtualList.create {
 
 virtualBgList:setKeyPressHandler({
     setSelectedIndex = function(i)
+        updateDesc(i)
         virtualBgList:changeSelection(i)
     end,
 })
@@ -152,6 +156,7 @@ local footer = ui.create {
             textSize,
             function()
                 local idx = math.random(#bgList)
+                updateDesc(idx)
                 virtualBgList:changeSelection(idx)
                 virtualBgList:scrollToIndex(idx, "center")
             end,
@@ -204,6 +209,7 @@ root = ui.create {
     } }
 }
 
+updateDesc(startIndex)
 virtualBgList:changeSelection(startIndex)
 root:update()
 return VirtualList.getMouseWheelHandler()
